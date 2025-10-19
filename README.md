@@ -18,8 +18,9 @@ Este servicio permite registrar **transacciones de depósito y retiro**, procesa
 ### 1️⃣ Clonar el repositorio
 
 ```bash
-git clone https://github.com/tuusuario/wallet-service.git
-cd wallet-service
+git clone https://github.com/Kevam97/refacil.git
+cd refacil
+cp .env.example .env
 ```
 
 ### 2️⃣ Construir e iniciar los servicios
@@ -240,4 +241,52 @@ curl http://localhost:8000/api/v1/balance/user-001
 - **Laravel Queue Jobs**
 - **bcMath (precisión decimal para saldos)**
 
+---
+## Resumen de la arquitectura
+
+- **Tecnología: Laravel 10+ (Eloquent, Jobs/Queues, FormRequests)**.
+
+- **DB: MySQL (tablas normalizadas: users, accounts o balances, transactions, alerts)**.
+
+- **Procesamiento: escritura de transacción a través de API -> validador -> Job en cola que aplica la lógica de negocio (actualiza balance) dentro de una transacción DB.**
+
+- **Observabilidad: auditoría básica (tabla transactions y alerts)**
+
+- **Escalado: stateless API + workers (horizontales) con Redis (o RabbitMQ) para colas**.
+
+- **Despliegue: Dockerfile + docker-compose para desarrollo.**
+---
+## 🔒 Seguridad, Idempotencia y Validación
+
+Este servicio implementa varias medidas para garantizar la integridad y consistencia de las transacciones financieras.
+
+### ⚙️ Idempotencia
+Cada transacción enviada debe incluir un campo único `transaction_id`.  
+- Si se intenta registrar una transacción con un `transaction_id` ya existente, la API debe retornar:
+  - **HTTP 409 (Conflict)** o
+  - El mismo recurso existente, evitando procesar duplicados.
+
+### ✅ Validaciones
+Antes de procesar cualquier solicitud, se aplican las siguientes reglas:
+- `amount` debe ser mayor a **0**
+- `timestamp` debe tener un formato de fecha válido
+- `type` debe ser uno de los valores permitidos (`deposit`, `withdraw`)
+- Se valida mediante un **FormRequest** (`TransactionRequest`) centralizado
+
+### 🔐 Autenticación y Autorización
+Si el servicio se utiliza dentro de un entorno de microservicios, se recomienda implementar alguno de los siguientes mecanismos:
+- **Mutual TLS (mTLS)**
+- **JWT** a través de un API Gateway
+- Autenticación interna mediante tokens firmados
+
+### 🚦 Rate Limiting
+Para evitar abusos, se sugiere implementar limitación de peticiones:
+- Por dirección **IP**
+- Por **API key** o **user_id**
+- Utilizando el middleware de Laravel `throttle`
+
+### 🧾 Auditoría y Trazabilidad
+- Las transacciones **nunca se eliminan**, solo cambian de estado (`pending`, `processed`, `failed`)
+- Se conserva el campo `metadata` completo para permitir auditorías posteriores
+- Se recomienda implementar logs estructurados en JSON para trazabilidad en sistemas distribuidos
 ---

@@ -15,7 +15,8 @@ class TransactionController extends Controller
     public function store(TransactionRequest $request)
     {
         $data = $request->validated();
-        $user = User::firstOrCreate(['external_id'=>$data['user_id']]);
+        $user = User::firstOrCreate(['external_id'=>$data['user_id'],
+            'email'=>$data['email']]);
 
         $account = Account::firstOrCreate(
             ['user_id' => $user->id, 'currency' => $data['currency'] ?? 'USD'],
@@ -27,8 +28,10 @@ class TransactionController extends Controller
             'account_id' => $account->id,
             'amount' => $data['amount'],
             'type' => $data['type'],
-            'occurred_at' => $data['timestamp'],
-            'metadata' => $request->except(['transaction_id','user_id','amount','type','timestamp']),
+            'occurred_at' => now(),
+            'metadata' =>  json_encode($request->except([
+                'transaction_id','user_id','amount','type','timestamp'
+            ])),
             'status' => 'pending',
         ]);
 

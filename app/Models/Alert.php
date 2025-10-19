@@ -9,4 +9,9 @@ class Alert extends Model
     protected $guarded = [
         'id'
     ];
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
+    }
 }

@@ -9,4 +9,13 @@ class Transaction extends Model
     protected $guarded = [
         'id'
     ];
+
+    protected $casts = [
+        'metadata' => 'array',
+    ];
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
+    }
 }

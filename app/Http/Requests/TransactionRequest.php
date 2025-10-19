@@ -24,9 +24,9 @@ class TransactionRequest extends FormRequest
         return [
             'transaction_id' =>'required|uuid',
             'user_id'        =>'required|string',
+            'email'          =>'required|string',
             'amount'         =>'required|numeric|gt:0',
             'type'           =>'required|in:deposit,withdraw',
-            'timestamp'      =>'required|date',
             'currency'       =>'sometimes|string|size:3',
         ];
     }

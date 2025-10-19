@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->uuid('transaction_id')->unique(); // id de entrada
+            $table->uuid('transaction_id')->unique();
             $table->foreignId('account_id')->constrained()->cascadeOnDelete();
             $table->decimal('amount', 20, 6);
             $table->enum('type', ['deposit','withdraw']);
-            $table->timestamp('occurred_at'); // timestamp del input
-            $table->jsonb('metadata')->nullable(); // para auditoría
+            $table->timestamp('occurred_at');
+            $table->json('metadata')->nullable();
             $table->enum('status', ['pending','processed','failed'])->default('pending');
-            $table->string('reason')->nullable(); // motivo error
+            $table->string('reason')->nullable();
             $table->timestamps();
         });
     }

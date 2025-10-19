@@ -10,7 +10,6 @@ services:
       - "8000:8000"
     depends_on:
       - db
-      - redis
     environment:
       - DB_CONNECTION=mysql
       - DB_HOST=db
@@ -18,7 +17,7 @@ services:
       - DB_DATABASE=wallet
       - DB_USERNAME=wallet
       - DB_PASSWORD=secret
-      - QUEUE_CONNECTION=redis
+      - QUEUE_CONNECTION=database
     command: bash -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
 
   db:
@@ -34,25 +33,20 @@ services:
     volumes:
       - db-data:/var/lib/mysql
 
-  redis:
-    image: redis:7
-    container_name: wallet-redis
-    ports:
-      - "6379:6379"
-
   queue-worker:
     build: .
     container_name: wallet-worker
     depends_on:
       - app
-      - redis
+      - db
     environment:
       - DB_CONNECTION=mysql
       - DB_HOST=db
+      - DB_PORT=3306
       - DB_DATABASE=wallet
       - DB_USERNAME=wallet
       - DB_PASSWORD=secret
-      - QUEUE_CONNECTION=redis
+      - QUEUE_CONNECTION=database
     command: php artisan queue:work --queue=transactions --sleep=3 --tries=3
 
 volumes:

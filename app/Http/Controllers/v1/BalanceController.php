@@ -13,7 +13,6 @@ class BalanceController extends Controller
     {
         $user = User::where('external_id', $userExternalId)->firstOrFail();
         $account = Account::where('user_id', $user->id)->firstOrFail();
-
         return response()->json([
             'user_id' => $user->external_id,
             'currency' => $account->currency,
