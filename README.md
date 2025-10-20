@@ -290,3 +290,36 @@ Para evitar abusos, se sugiere implementar limitación de peticiones:
 - Se conserva el campo `metadata` completo para permitir auditorías posteriores
 - Se recomienda implementar logs estructurados en JSON para trazabilidad en sistemas distribuidos
 ---
+## 💡 Preguntas Conceptuales
+
+### 1️⃣ ¿Cómo manejar los picos altos de transacciones?
+
+- La API debe ser **sin estado (stateless)**, lo que permite escalar fácilmente agregando más instancias del servicio cuando aumenta la carga.  
+- Las transacciones entrantes se registran rápidamente como **"pendientes"** y se envían a una **cola** para su procesamiento posterior.  
+- Los **workers** que procesan las transacciones pueden escalarse automáticamente según la cantidad de mensajes en la cola.  
+- Si la base de datos se vuelve un cuello de botella, puede dividirse por usuario o cuenta (sharding).  
+- Los **balances** y datos de lectura frecuentes pueden almacenarse temporalmente en cache.  
+- En momentos de carga extrema, se pueden procesar operaciones por lotes (batch) para mejorar el rendimiento.  
+- Se recomienda tener métricas y alertas para detectar sobrecarga y activar el **autoescalado**.
+
+---
+
+### 2️⃣ ¿Qué estrategias usar para prevenir fraudes?
+
+- Establecer **límites por transacción** y también por períodos de tiempo (por ejemplo, monto máximo diario).  
+- Detectar **patrones anormales**, como actividad inusual en horarios o ubicaciones.  
+- Aplicar una **verificación adicional** (como 2FA o revisión manual) si se detecta una operación sospechosa.  
+- Monitorear la **velocidad de las transacciones** y bloquear aquellas que superen límites razonables.  
+- Mantener **listas negras** de cuentas o IPs con comportamiento riesgoso.  
+- Guardar todos los eventos para auditorías y activar **alertas en tiempo real** ante anomalías.  
+- Si se requiere, integrar con servicios externos de **verificación de identidad (KYC)** o detección de fraude.
+
+---
+
+### 3️⃣ ¿Cómo mejorar si el sistema se vuelve lento por alta concurrencia?
+
+- Revisar qué partes generan bloqueos o esperas (por ejemplo, actualizaciones simultáneas de un mismo balance).  
+- Evitar bloqueos largos: permitir que las operaciones se procesen en paralelo o con actualización diferida.  
+- Aumentar el número de **workers** y agregar **réplicas de base de datos** para repartir la carga.  
+- Usar **cache** para las consultas más frecuentes y enviar tareas pesadas a procesos en segundo plano.  
+- Optimizar las consultas y los índices de base de datos para que respondan más rápido.  
